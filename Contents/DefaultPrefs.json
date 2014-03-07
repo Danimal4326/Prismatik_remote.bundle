@@ -1,0 +1,15 @@
+[
+    {
+        "id": "prismatic_ip",
+        "label": "Prismatic Server IP",
+        "type": "text",
+        "default": "127.0.0.1"
+    },
+    {
+        "id": "prismatic_port",
+        "label": "Port",
+        "type": "text",
+        "default": "3636"
+    }
+]
+

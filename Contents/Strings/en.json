@@ -1,0 +1,17 @@
+{
+    'Title': 'Prismatik Remote',
+    'ApplicationsTitle': 'Airfoil',
+    'Connected': 'Connected',
+    'Running': 'Running',
+    'Not_Running': 'Not Running',
+    'Connect': 'Connect',
+    'Disconnect': 'Disconnect',
+    'Launch': 'Launch',
+    'Quit': 'Quit',
+    'Computer': 'Computer',
+	'Prismatik_Error': 'Prismatik Error !',
+	'Airfoil_Speakers_Error': 'Airfoil Speakers Error !',
+	'Airfoil_Speakers_Version_Error': 'Airfoil Speakers v3.5.0 is required.\nPlease update Airfoil Speakers.',
+	'No_Prismatik_found': 'Prismatik has not been found !',
+	'Install_Prismatik_Error': 'Please install Prismatik.',
+}
