@@ -1,15 +1,21 @@
 [
     {
-        "id": "prismatic_ip",
-        "label": "Prismatic Server IP",
+        "id": "prismatik_ip",
+        "label": "Prismatik Server IP",
         "type": "text",
         "default": "127.0.0.1"
     },
     {
-        "id": "prismatic_port",
+        "id": "prismatik_port",
         "label": "Port",
         "type": "text",
         "default": "3636"
+    },
+    {
+        "id": "RESET",
+        "label": "Reset Default",
+        "type": "bool",
+        "default": "False"
     }
 ]
 

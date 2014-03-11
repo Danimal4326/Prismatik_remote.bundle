@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
+<dict>
     <key>CFBundleIdentifier</key>
-      <string>com.plexapp.plugins.prismatik_remote</string>
-    <key>PlexClientPlatforms</key>
-      <string>*</string>
+    <string>com.plexapp.plugins.prismatik_remote</string>
     <key>PlexFrameworkVersion</key>
-      <string>2</string>
+    <string>2</string>
     <key>PlexPluginCodePolicy</key>
-      <string>Elevated</string>
+    <string>Elevated</string>
+    <key>PlexClientPlatforms</key>
+    <string>*</string>
     <key>PlexPluginTesterFlags</key>
       <array>
         <string>NoURLServices</string>
