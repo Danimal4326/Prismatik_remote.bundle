@@ -34,61 +34,65 @@ def Start():
 @handler(PREFIX, NAME, art=R(ART), thumb=R(ICON))
 def MainMenu():
 
-	Log('Prismatik Remote MainMenu')
-	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
-	Plugin.AddViewGroup('InfoList', viewMode='InfoList', mediaType='items')
-	Plugin.AddViewGroup('PanelStream', viewMode='PanelStream', mediaType='items')
+	oc = ObjectContainer()
 
-	oc = ObjectContainer(view_group='List')
+	# test
+        if Platform.OS in ('MacOSX') and (not IsPrismatikRunning()):
+			oc.add(LaunchPrismatikObject())
 
-	try:
-		Profiles = GetProfiles()
-		CurrentProfile = GetCurrentProfile()
+	else:
 
-		oc.add(PopupDirectoryObject( key=Callback(ListProfiles),
-					     title='Set Profile ('+CurrentProfile+')',
-					     summary=CurrentProfile,
-                                             thumb=R('lightpack.png')))
+		try:
+			Profiles       = GetProfiles()
+			CurrentProfile = GetCurrentProfile()
+			LightpackOn    = IsLightpackOn()
+		
+			if ( LightpackOn ):
+				current_thumb   = R('lightpack.png')
+				on_off_title    = 'Turn Lights Off'
+				on_off_callback = Callback(LightsOff)
+			else:
+				current_thumb   = R('lightpack-off.png')
+				on_off_title    = 'Turn Lights On'
+				on_off_callback = Callback(LightsOn)
 
-	#	for profileId in Profiles:
+			# add item for each profile
+			for profileId in Profiles:
 
-	#		if (profileId == CurrentProfile):
-	#			status = ' ('+L('Active') + ')'
-	#		else:
-	#			status = ''
-	#	
-	#		item = PopupDirectoryObject(
-	#			key = Callback(SetProfile, profileId=profileId),
-	#			title = profileId+status,
-	#			summary=status,
-	#			thumb=R('lightpack.png'),
-	#			#replace_parent=True,
-	#			#no_cache=True
-	#		)
-	#		oc.add(item)
-
-		# Add item for turning lights off
-		if ( IsLightpackOn() ):
-			item = PopupDirectoryObject(
-				key = Callback(LightsOff),
-				title = 'Turn Lights Off',
-				summary='Turn Lights Off',
-				thumb=R('lightpack.png')
+				if (profileId == CurrentProfile):
+					status = ' (Active)'
+				else:
+					status = ''
+		
+				item = PopupDirectoryObject(
+					key   = Callback(SetProfile, profileId=profileId),
+					title = profileId+status,
+					thumb = current_thumb
 				)
-		else:
+				oc.add(item)
+
+			# Add item for turning lights on/off
 			item = PopupDirectoryObject(
-				key = Callback(LightsOn),
-				title = 'Turn Lights On',
-				summary='Turn Lights On',
-				thumb=R('lightpack.png')
+				key   = on_off_callback,
+				title = on_off_title,
+				thumb = current_thumb
 				)
 
-		oc.add(item)
+			oc.add(item)
 
-	except:
-		AddErrorObject(oc, L('No_Prismatik_connect'), L('Check_Preferences'), R('error.png'))
+		except:
+			# Add popup for no-connection
+			item = PopupDirectoryObject(
+				key   = Callback(ErrorCallback, error=L('Check_Preferences')),
+				title = L('No_Prismatik_connect'),
+				thumb = R('error.png')
+				)
+			oc.add(item)
 
-	
+        	if Platform.OS in ('MacOSX') and IsPrismatikRunning():
+			oc.add(QuitPrismatikObject(current_thumb))
+
+	# Add item for setting preferences	
 	oc.add(PrefsObject(title = L('Preferences'), thumb = R(PREFS_ICON)))
 
 	return oc
@@ -106,12 +110,12 @@ def ValidatePrefs():
 
 	try:
         	lpack = LightpackConnect()
+       		LightpackDisconnect(lpack)
 	except:
 		Log("Unable to connect to Prismatik")
-		HTTP.Request('http://localhost:32400/:/plugins/com.plexapp.plugins.prismatik_remote/prefs/set?prismatik_ip=127.0.0.1&prismatik_port=3636', immediate=True)
+		#HTTP.Request('http://localhost:32400/:/plugins/com.plexapp.plugins.prismatik_remote/prefs/set?prismatik_ip=127.0.0.1&prismatik_port=3636', immediate=True)
 		return ObjectContainer(header='Error', message=L('No_Prismatik_connect'))
 
-       	LightpackDisconnect(lpack)
 	return 
 
 ####################################################################################################
@@ -125,64 +129,48 @@ def ResetPrefs():
 
 
 ####################################################################################################
-# Popup for user to select profile
-####################################################################################################
-@route(PREFIX + '/list_profiles')
-def ListProfiles():
-
-	oc = ObjectContainer(title2='Select a Profile', replace_parent=True,view_group='List')
-
-	Profiles = GetProfiles()
-	CurrentProfile = GetCurrentProfile()
-
-	for profileId in Profiles:
-
-		if (profileId == CurrentProfile):
-			status = ' ('+L('Active') + ')'
-		else:
-			status = ''
-	
-		item = PopupDirectoryObject(
-			key = Callback(SetProfile, profileId=profileId),
-			title = profileId+status,
-			summary=profileId+status,
-			thumb=R('lightpack.png'),
-		)
-		oc.add(item)
-
-	return oc
-
-####################################################################################################
 # Activates a Prismatik profile and turns on the lights
 ####################################################################################################
-@route(PREFIX + '/list_profiles/select_profile')
+@route(PREFIX + '/select_profile')
 def SetProfile(profileId):
 	lpack = LightpackConnect()
 	lpack.setProfile(profileId)
 	lpack.turnOn()
         LightpackDisconnect(lpack)
-	return MainMenu()
+	oc = ObjectContainer()
+	oc.header = NAME
+	oc.message = 'Profile "%s" enabled' % profileId
+	return oc
 
 ####################################################################################################
 # Turns on the lights 
 ####################################################################################################
+@route(PREFIX + '/lights_on')
 def LightsOn():
 	lpack = LightpackConnect()
         lpack.turnOn()
         LightpackDisconnect(lpack)
-	return MainMenu()
+	oc = ObjectContainer()
+	oc.header = NAME
+	oc.message = 'Lights turned on'
+	return oc
  
 ####################################################################################################
 # Turns off the lights 
 ####################################################################################################
+@route(PREFIX + '/lights_off')
 def LightsOff():
 	lpack = LightpackConnect()
         lpack.turnOff()
         LightpackDisconnect(lpack)
-	return MainMenu()
+	oc = ObjectContainer()
+	oc.header = NAME
+	oc.message = 'Lights turned off'
+	return oc
+
 
 ####################################################################################################
-# Returns a list of prifiles defined in Prismatik 
+# Returns a list of profiles defined in Prismatik 
 ####################################################################################################
 def GetProfiles():
 	lpack = LightpackConnect()
@@ -219,8 +207,8 @@ def LightpackConnect():
         remote_port = Prefs['prismatik_port']
         lpack = lightpack.lightpack(remote_ip,int(remote_port),[1,2,3,4,5,6,7,8,9,10])
 	out=lpack.connect()
+
 	if ( out == -1 ):
-		Log(out)
 		raise Exception('Connection Error') 
 	else:
         	lpack.lock()
@@ -234,31 +222,73 @@ def LightpackDisconnect(lpack):
 	lpack.disconnect()
 
 ####################################################################################################
-# Creates error entry if cannot connect to Prismatik 
+#  Show error message 
 ####################################################################################################
-def AddErrorObject(oc, title, error, image):
-	item = DirectoryObject(
-		key=Callback(ErrorCallback, error=error),
-		title=title,
-		summary=error,
-		thumb=R(ICON),
-		art=R(ART)
-	)
-	oc.add(item)
-
-
-def QuitPrismatikCallback():
-	QuitPrismatik()
-	return MainMenu()
-	
-def LaunchPrismatikCallback():
-	LaunchPrismatik()
-	return MainMenu()
-
+@route(PREFIX + '/error')
 def ErrorCallback(error):
-	return ObjectContainer(title=error)
-
+	return ObjectContainer(header='Error', message=error)
 	
+####################################################################################################
+# Check if Prismatik application is running 
+####################################################################################################
+def IsPrismatikRunning():
+	applescript = """tell application "System Events" to count (every process whose name is "Prismatik")"""
+	return execAppleScript(applescript) == "1"
+	
+####################################################################################################
+# Returns object to Quit the Prismatik app
+####################################################################################################
+def QuitPrismatikObject(thumb):
+	return PopupDirectoryObject(
+		key   = Callback(QuitPrismatikCallback),
+		title = 'Quit Prismatik',
+		thumb = thumb,
+	)
+
+####################################################################################################
+# Executes Applescript to Quit the Prismatik app
+####################################################################################################
+def QuitPrismatikCallback():
+	applescript = """tell application "Prismatik" to quit"""
+	execAppleScript(applescript)
+	oc = ObjectContainer()
+	oc.header = NAME
+	oc.message = 'Prismatik has exited'
+	return oc
+	
+####################################################################################################
+# Returns object to Launch the Prismatik app
+####################################################################################################
+def LaunchPrismatikObject():
+	return PopupDirectoryObject(
+		key   = Callback(LaunchPrismatikCallback),
+		title = 'Launch Prismatik',
+		thumb = R('lightpack-off.png'),
+	)
+
+####################################################################################################
+# Executes Applescript to Launch the Prismatik app
+####################################################################################################
+def LaunchPrismatikCallback():
+	applescript = """tell application "Prismatik" to run"""
+	execAppleScript(applescript)
+	oc = ObjectContainer()
+	oc.header = NAME
+	oc.message = 'Prismatik has started'
+	return oc
+
+####################################################################################################
+# Executes an AppleScript
+####################################################################################################
+def execAppleScript(*applescripts):	
+	cmd = 'osascript'
+	for applescript in applescripts:
+		cmd += " -e '" +  applescript + "'"
+	return execShellCommand(cmd)
+	
+####################################################################################################
+# Executes shell command
+####################################################################################################
 def execShellCommand(cmd):
 	f = os.popen(cmd)
 	output = f.readlines()
@@ -266,27 +296,4 @@ def execShellCommand(cmd):
 		result = output[0].replace('\n', '')
 		return result
 	return ''
-
-def execAppleScript(*applescripts):	
-	cmd = 'osascript'
-	for applescript in applescripts:
-		cmd += " -e '" +  applescript + "'"
-	return execShellCommand(cmd)
-	
-def IsApplicationExists(applicationID):
-	#return execAppleScript("""tell application "Finder\"""", "try", """exists application file id \"""" + applicationID + """\"""", "true", "on error", "false", "end try", "end tell") == "true"
-	return 1
-
-def IsPrismatikRunning():
-	applescript = """tell application "System Events" to count (every process whose name is "Prismatik")"""
-	return execAppleScript(applescript) == "1"
-	
-def QuitPrismatik():
-	applescript = """tell application "Prismatik" to quit"""
-	execAppleScript(applescript)
-
-def LaunchPrismatik():
-	applescript = """tell application "Prismatik" to run"""
-	execAppleScript(applescript)
-
 
