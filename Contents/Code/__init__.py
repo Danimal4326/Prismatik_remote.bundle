@@ -205,7 +205,7 @@ def IsLightpackOn():
 def LightpackConnect():
 	remote_ip = Prefs['prismatik_ip']
         remote_port = Prefs['prismatik_port']
-        lpack = lightpack.lightpack(remote_ip,int(remote_port),[1,2,3,4,5,6,7,8,9,10])
+        lpack = lightpack.lightpack(remote_ip,int(remote_port),[1,2,3,4,5,6,7,8,9,10], " ")
 	out=lpack.connect()
 
 	if ( out == -1 ):
